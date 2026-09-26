@@ -1,0 +1,6 @@
+# Core framework has zero required runtime dependencies (stdlib only).
+# Install this for running a real Claude/Anthropic-backed agent:
+anthropic>=0.40.0
+
+# Dev/test only:
+pytest>=7.4.0

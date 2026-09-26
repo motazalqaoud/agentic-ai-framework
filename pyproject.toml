@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agentic-ai-framework"
+version = "0.1.0"
+description = "A small, dependency-light framework for building tool-using LLM agents (ReAct loop, planner, memory, tool registry)."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Motaz Alqaoud" }]
+
+[project.optional-dependencies]
+anthropic = ["anthropic>=0.40.0"]
+dev = ["pytest>=7.4.0"]
+
+[tool.setuptools.packages.find]
+include = ["agentic*"]
