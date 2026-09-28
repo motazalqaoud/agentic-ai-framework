@@ -1,7 +1,8 @@
 # agentic-ai-framework
 
+[![tests](https://github.com/motazalqaoud/agentic-ai-framework/actions/workflows/tests.yml/badge.svg)](https://github.com/motazalqaoud/agentic-ai-framework/actions/workflows/tests.yml)
 [![Python](https://img.shields.io/badge/Python-3.9%2B-blue)](https://python.org)
-[![Tests](https://img.shields.io/badge/tests-21%20passing-brightgreen)](tests/)
+[![Tests](https://img.shields.io/badge/tests-26%20passing-brightgreen)](tests/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![GitHub](https://img.shields.io/badge/GitHub-motazalqaoud-black)](https://github.com/motazalqaoud)
 
@@ -73,15 +74,19 @@ agentic-ai-framework/
 │   ├── executor.py         Runs a Plan as a sequence of bounded Agent.run calls
 │   ├── planner.py          Decomposes a goal into an ordered list of subtasks
 │   ├── memory.py           Bounded short-term buffer + persisted long-term key/value store
+│   ├── __main__.py         CLI entry point (`agentic "goal"` / `python -m agentic`)
 │   ├── tools/
 │   │   ├── base.py          Tool dataclass, @tool decorator, ToolRegistry
-│   │   └── builtin.py       calculator, read_file, write_file, current_datetime, web_search_stub
+│   │   └── builtin.py       calculator, file I/O, list_directory, http_get, datetime, search stub
 │   └── llm/
 │       └── client.py        LLMClient interface, AnthropicLLMClient, MockLLMClient
 ├── examples/
 │   ├── math_agent.py        Single Agent solving a two-step arithmetic task
 │   └── research_agent.py    Planner + Executor chaining a multi-phase goal
-├── tests/                   21 tests, all offline (MockLLMClient, no network, no API key)
+├── tests/                   26 tests, all offline (MockLLMClient, no network, no API key)
+├── docs/architecture.md     How the layers fit together, and why
+├── .github/workflows/       CI: tests on Python 3.9-3.12
+├── CONTRIBUTING.md
 ├── requirements.txt
 └── pyproject.toml
 ```
@@ -101,7 +106,21 @@ pip install -e ".[anthropic]"
 export ANTHROPIC_API_KEY=sk-...
 ```
 
-## Quickstart
+## Quickstart — command line
+
+No code required. The package installs an `agentic` command:
+
+```bash
+agentic "What is 17 * 23, and is that number prime?"
+agentic --plan "Read notes.txt, summarize it, and write the summary to summary.txt"
+agentic --demo "What is (12 * 7) + 5?"     # offline, no API key needed
+```
+
+`--plan` routes the goal through the Planner and Executor instead of one flat
+loop. `--demo` runs against the scripted mock client, so you can see the loop's
+shape without a key. `python -m agentic ...` works identically.
+
+## Quickstart — library
 
 ```python
 from agentic import Agent, ToolRegistry, AnthropicLLMClient
@@ -112,6 +131,13 @@ agent = Agent(llm=AnthropicLLMClient(), tools=tools, max_steps=8)
 
 result = agent.run("What is 17 * 23, and is that number prime?")
 print(result.final_answer)
+```
+
+Inspect what actually happened:
+
+```python
+for step in result.steps:
+    print(step.thought, step.action, step.observation, step.malformed)
 ```
 
 Registering your own tool is one decorator:
@@ -139,9 +165,13 @@ python examples/research_agent.py   # Planner + Executor over a two-phase goal
 pytest tests/ -v
 ```
 
-21 tests covering the agent loop (tool dispatch, unknown-tool handling, step-budget
-exhaustion, final-answer parsing), the tool registry and built-in tools, bounded and
-persisted memory, plan parsing, and multi-step execution -- all offline.
+26 tests covering the agent loop (tool dispatch, unknown-tool handling, step-budget
+exhaustion, final-answer parsing, format-drift recovery), the tool registry and
+built-in tools, bounded and persisted memory, plan parsing, and multi-step
+execution -- all offline, and all run in CI against Python 3.9 through 3.12.
+
+Architecture and design rationale: [docs/architecture.md](docs/architecture.md).
+Contributing: [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Limitations and disclaimer
 

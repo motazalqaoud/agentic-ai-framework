@@ -6,3 +6,5 @@ __pycache__/
 venv/
 .env
 memory.json
+build/
+dist/

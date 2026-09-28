@@ -67,6 +67,8 @@ class AgentStep:
     action_input: Optional[dict] = None
     observation: Optional[str] = None
     final_answer: Optional[str] = None
+    malformed: bool = False
+    """True when the model's response contained neither an Action nor a Final Answer."""
 
 
 @dataclass
@@ -111,6 +113,18 @@ class Agent:
             if step.action is not None:
                 step.observation = self._execute(step.action, step.action_input or {})
                 self.memory.add("user", f"Observation: {step.observation}")
+            else:
+                # Neither an Action nor a Final Answer: the model drifted from the
+                # protocol. Say so explicitly rather than silently burning steps --
+                # an unguided retry usually drifts again.
+                step.malformed = True
+                self.memory.add(
+                    "user",
+                    "Your last response did not contain a valid 'Action:' line or a "
+                    "'Final Answer:' line. Reply again using exactly one of:\n"
+                    "Thought: ...\nAction: <tool name>\nAction Input: {\"key\": \"value\"}\n"
+                    "or\nThought: ...\nFinal Answer: ...",
+                )
 
             steps.append(step)
 

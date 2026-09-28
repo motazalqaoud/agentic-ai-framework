@@ -11,6 +11,22 @@ requires-python = ">=3.9"
 license = { text = "MIT" }
 authors = [{ name = "Motaz Alqaoud" }]
 
+keywords = ["llm", "agents", "react", "tool-use", "agent-framework"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+[project.urls]
+Homepage = "https://github.com/motazalqaoud/agentic-ai-framework"
+Issues = "https://github.com/motazalqaoud/agentic-ai-framework/issues"
+
+[project.scripts]
+agentic = "agentic.__main__:main"
+
 [project.optional-dependencies]
 anthropic = ["anthropic>=0.40.0"]
 dev = ["pytest>=7.4.0"]

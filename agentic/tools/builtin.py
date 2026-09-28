@@ -67,6 +67,38 @@ def current_datetime() -> str:
     return datetime.datetime.now(datetime.timezone.utc).isoformat()
 
 
+@tool(description="List the entries in a directory. Returns one name per line, directories marked with a trailing slash.")
+def list_directory(path: str) -> str:
+    p = pathlib.Path(path)
+    if not p.exists():
+        return f"error: no such directory: {path}"
+    if not p.is_dir():
+        return f"error: not a directory: {path}"
+    entries = sorted(p.iterdir(), key=lambda e: (not e.is_dir(), e.name))
+    if not entries:
+        return "(empty directory)"
+    return "\n".join(f"{e.name}/" if e.is_dir() else e.name for e in entries[:200])
+
+
+@tool(description="Fetch a URL over HTTP(S) and return the response body as text (truncated to 8000 chars).")
+def http_get(url: str) -> str:
+    import urllib.error
+    import urllib.request
+
+    if not url.lower().startswith(("http://", "https://")):
+        return "error: url must start with http:// or https://"
+    request = urllib.request.Request(url, headers={"User-Agent": "agentic-ai-framework/0.1"})
+    try:
+        with urllib.request.urlopen(request, timeout=20) as response:
+            raw = response.read(1_000_000)
+    except urllib.error.HTTPError as exc:
+        return f"error: HTTP {exc.code} for {url}"
+    except Exception as exc:  # network errors become observations, not crashes
+        return f"error fetching {url}: {exc}"
+    text = raw.decode("utf-8", errors="replace")
+    return text if len(text) <= 8000 else text[:8000] + "\n...[truncated]"
+
+
 @tool(description="Stub web search -- returns a fixed placeholder. Replace with a real search API in production.")
 def web_search_stub(query: str) -> str:
     return (

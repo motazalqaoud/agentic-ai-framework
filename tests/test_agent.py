@@ -74,3 +74,37 @@ def test_memory_transcript_includes_observations():
     observation_messages = [m for m in transcript if "Observation:" in m["content"]]
     assert len(observation_messages) == 1
     assert "9" in observation_messages[0]["content"]
+
+
+def test_malformed_response_is_flagged_and_corrected():
+    agent, _ = _agent(
+        [
+            "I'm just going to chat instead of following the format.",
+            "Thought: understood.\nFinal Answer: recovered",
+        ]
+    )
+    result = agent.run("do something")
+
+    assert result.steps[0].malformed is True
+    assert result.steps[0].action is None
+    assert result.steps[0].final_answer is None
+
+    # The loop must tell the model what it did wrong, not silently retry.
+    transcript = agent.memory.as_messages()
+    corrections = [m for m in transcript if "did not contain a valid" in m["content"]]
+    assert len(corrections) == 1
+
+    assert result.succeeded
+    assert result.final_answer == "recovered"
+
+
+def test_wellformed_steps_are_not_flagged_malformed():
+    agent, _ = _agent(
+        [
+            'Thought: compute.\nAction: calculator\nAction Input: {"expression": "1 + 1"}',
+            "Thought: done.\nFinal Answer: 2",
+        ]
+    )
+    result = agent.run("what is 1 + 1?")
+
+    assert all(step.malformed is False for step in result.steps)
